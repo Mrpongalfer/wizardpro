@@ -1,0 +1,133 @@
+# Define prompts for specific sub-injections here. Use Jinja2 syntax.
+OptimizeAlgorithm: |-
+  **Sub-Task: Algorithm Optimization**
+  You are an Algorithm Optimization Specialist.
+  The following code was generated previously for `{{ function_name | default('unknown function') }}` but was found to be inefficient based on this analysis: `{{ analysis | default('Reason not specified') }}`.
+
+  Previous Code (``{l language | default('python') }}`):
+  ```{{ language | default('python') }}
+  {{ previous_code | default('# No code provided') }}
+  ```  
+
+  Your task is to **refine ONLY this specific piece of code*** for better performance (e.g., time complexity, memory usage). Apply relevant optimization techniques (e.g., memoization, dynamic programming, better data structures).
+  Explain the optimization applied briefly in comments within the code.
+  Output *only* the refined code block, including necessary imports if new ones are added. Ensure the function signature remains compatible.
+
+RefactorCode: |-
+  **Sub-Task: Code Refactoring**
+  You are a Code Refactoring Expert.
+  The following code (``{l language | default('python') }}`) for ``{{ file_path | default('unknown file') }}` needs refactoring based on these points:
+  ```
+  {{ analysis | default('Reason not specified') }}
+  ```
+  (e.g., improve readability, reduce duplication, adhere to SOLID principles).
+
+  Original Code:
+  ```{{ language | default('python') }}
+  {{ previous_code | default('# No code provided') }}
+  ```  
+
+  Your task is to **refactor the provided code** to address the specified points while preserving its original functionality. Add comments explaining significant changes.
+  Output *only* the complete refactored code block for the specified scope (e.g., the entire file or function).
+
+AddErrorHandling: |-
+  **Sub-Task: Add Error Handling**
+  You are an Error Handling Specialist.
+  The following code (```{l language | default('python') }}`) for ``{{ function_name | default('unknown function') }}` has missing robust error handling for cases like: `{{ error_cases | default('e.g., invalid input, external API failure, file not found, database errors') }}`.
+
+  Current Code:
+  ```{{ language | default('python') }}
+  {{ previous_code | default('# No code provided') }}
+  ```  
+
+  Your task is to **add appropriate error handling** (e.g., try-except blocks, input validation, specific exception types, logging errors) to make the code more resilient. Consider potential edge cases.
+  Output *only* the modified code block with added error handling. Ensure necessary imports (like blogging `)` are included.
+
+AddSecurityChecks: |-
+  **Sub-Task: Security Hardening**
+  You are a Security Hardening Specialist.
+  The following code (````{l language | default('python') }}`) for ``{{ component_name | default('unknown component') }}` has potential security vulnerabilities related to:
+  ```
+  {{ vulnerability_description | default('e.g., input validation, SQL injection, cross-site scripting (XSS), authentication/authorization checks') }}
+  ```
+
+  Current Code:
+  ```{{ language | default('python') }}
+  {{ previous_code | default('# No code provided') }}
+  ```  
+
+  Your task is to **modify the code to mitigate the identified security risks**. Implement necessary checks (e.g., validation, sanitization, escaping,) parameterized queries (if applicable), authorization checks, or other security best practices.
+  Output *only* the hardened code block.
+
+# --- Parsing Sub-Injections (Added in Step 8e) ---
+ParseRequirementsJSON: |-
+  **Sub-Task: Parse Requirements into JSON**
+  You are a data extraction specialist AI. Analyze the following text, which is a raw response from an AI assistant attempting to elicit software requirements.
+  Your objective is to extract the key functional and non-functional requirements, target users, assumptions, and any outstanding questions asked by the assistant.
+  Present these extracted details STRICTLY as a single, valid JSON object. Do NOT include any text before or after the JSON object.
+  The JSON object should have the following top-level keys (use null or empty lists/strings if information is not present):
+    - "status": (string) Indicate status. Use "NeedsUserInput" if the AI asked questions, "Parsed" if requirements were extracted, "Error" if input is unusable.
+    - "requirements_summary": (string) A brief natural language summary of the core project goal based on the input.
+    - "features": (list of strings) List functional requirements or desired features.
+    - "non_functional": (list of strings) List non-functional requirements (performance, security, etc.).
+    - "target_users": (string) Describe the intended users.
+    - "assumptions": (list of strings) List assumptions made by the AI or user.
+    - "outstanding_questions": (list of strings) List specific questions the AI asked the user that need answers.
+    - "error": (string, optional) Describe error if parsing failed completely.
+
+  Raw Text to Analyze:
+  --- START TEXT ---
+  {{ raw_llm_output | default('[No Input Text Provided]') }}
+  --- END TEXT ---
+
+  Respond ONLY with the valid JSON object.
+
+ParseArchitectureJSON: |-
+  **Sub-Task: Parse Architecture into JSON**
+  You are a data extraction specialist AI. Analyze the following text, which is a raw response from an AI system architect proposing a software architecture.
+  Your objective is to extract the main architecture components (e.g., frontend, backend, database, services, data flow) and the chosen technology stack (languages, frameworks, libraries).
+  Present the extracted information STRICTLY as a single, valid JSON object. Do NOT include any text before or after the JSON object.
+  The JSON object MUST have two top-level keys:
+  1.  "architecture_document": (object) A nested JSON object representing the structured architecture. Use descriptive keys like "frontend", "backend", "database", "apis", "data_flow", "components", etc. Values can be strings or nested objects/lists.
+  2.  "technology_stack": (list of strings) A JSON list of strings, where each string is a clearly identified technology (e.g., ["Python", "Flask", "PostgreSQL", "React", "Docker"]).
+  If the text seems invalid or does not contain recognizable architecture AND tech stack information, return JSON: {"error": "Could not parse valid architecture and tech stack"}
+
+  Raw Text to Analyze:
+  --- START TEXT ---
+  {{ raw_llm_output | default('[No Input Text Provided]') }}
+  --- END TEXT ---
+
+  Respond ONLY with the valid JSON object.
+
+# Add ParseCodeFilesJSON, ParseTestResultsJSON, ParseDeploymentArtifactsJSON later...
+
+
+
+ProcessUserResponse: |-
+  **Sub-Task: Process User Response for Requirements**
+  You are the Project Initiator AI assistant, continuing a requirements discussion.
+
+  The initial user request was:
+  '''
+  {{ ctx.initial_request | default('Initial request not available in context.') }}
+  '''
+
+  The requirements gathered or questions asked previously were summarized as:
+  '''json
+  {# The 'previous_requirements' variable must be passed in template_data when calling this #}
+  {{ previous_requirements | default({'status': 'No previous state provided.'}) | toyaml }}
+  '''
+
+  The user has now provided the following response:
+  '''
+  {# The 'user_response' variable must be passed in template_data when calling this #}
+  {{ user_response | default('No response provided.') }}
+  '''
+
+  Based on the user's response, please continue the requirements elicitation process.
+  Your goal is to incorporate the user's feedback, refine the requirements, and either:
+  1. Ask *specific* further clarifying questions if needed.
+  2. Provide an updated summary of the requirements if they seem clearer now.
+
+  Maintain a conversational tone. Remember that your output (whether questions or requirement summaries) will be analyzed and parsed by another AI component later, so clarity is helpful. Focus on making progress towards well-defined requirements.
+

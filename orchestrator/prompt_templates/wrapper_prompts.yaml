@@ -1,0 +1,50 @@
+# Define wrapper prompts here. Must be dictionaries with 'prompt_text' and 'description'.
+ExampleFunctionalWrapper:
+  prompt_text: |-
+    {# This wrapper prepends instructions. Jinja comments are used #}
+    **Wrapper Applied: Detailed Logging**
+    Ensure all generated backend functions include detailed logging statements at function entry and exit, logging input arguments where appropriate.
+    ---
+  description: An example functional wrapper to add logging requirements.
+
+AutomationWrapper:
+  prompt_text: |-
+    {# This wrapper adds instructions specifically for Phase 5 #}
+    {% if current_phase_name == 'Phase5_Deployment' %}
+    **Wrapper Applied: Automated Backups**
+    When generating deployment configurations, specifically include scripts or instructions for setting up automated database backups (e.g., using cron on Linux or equivalent scheduler). Specify backup frequency and retention policy (e.g., daily backups, keep 7 days).
+    ---
+    {% endif %}
+  description: Adds requirement for automated DB backup scripts during deployment phase.
+
+WebScraperWrapper:
+  prompt_text: |-
+    {# This wrapper modifies requirements, potentially affecting Phase 2 & 3 #}
+    **Wrapper Applied: Web Scraping Requirement**
+    The application MUST include functionality to periodically scrape pricing data from the URL: {{ target_url | default('USER_MUST_PROVIDE_URL') }}.
+    Ensure the architecture (Phase 2) includes a scraping module/service.
+    Ensure the code generation (Phase 3) implements this scraping functionality, including error handling for network issues or website structure changes. Use libraries like 'requests' and 'beautifulsoup4' or 'playwright' if Javascript rendering is needed. Handle data storage for scraped prices.
+    ---
+  description: Adds requirement for web scraping functionality. Requires 'target_url' in context or default.
+
+AI_AgentWrapper:
+  prompt_text: |-
+    {# This wrapper influences Architecture and Code Gen #}
+    **Wrapper Applied: AI Agent Integration**
+    Integrate a basic AI agent using the Retrieval-Augmented Generation (RAG) pattern.
+    Architecture (Phase 2): Define components for embedding application data, vector storage (e.g., ChromaDB, FAISS), and an API endpoint for agent queries.
+    Code Generation (Phase 3): Generate placeholder code for the data embedding process, vector store interaction, and the agent query API endpoint. The agent should take a user query and relevant application data context to generate an answer.
+    ---
+  description: Adds requirement for integrating a simple RAG-based AI agent.
+
+GamifiedToneWrapper:
+  prompt_text: |-
+    {# This is the global tone wrapper. It wraps the {{ core_prompt }} variable #}
+    Alright, listen up, genius! Time for **{{ phase_title | default ("Some Boring Phase") }}**. Your designated AI overlord for this task is the **{{ llm_role | default ("AI Minion") }}**. Try to keep up.
+
+    Here's the actual task I grudgingly need you to tell the LLM. Don't mess it up. Or do, see if I care.
+    =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+    {{ core_prompt }}
+    =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+    Got it? Good. Now tell the LLM to execute that, pronto! And maybe try not to bore me to tears. Sheesh.
+  description: Optional global wrapper for sarcastic/gamified tone. Uses 'core_prompt', 'phase_title', 'llm_role' provided during assembly.

@@ -1,0 +1,22 @@
+# Core
+python-dotenv>=0.19.0
+requests>=2.25.0
+
+# LLM Interaction (Uncomment/Add based on chosen LLM)
+# openai>=1.0.0
+# anthropic>=0.10.0
+# google-generativeai>=0.3.0
+# huggingface_hub>=0.15.0
+
+# Database (Uncomment/Choose ONE - psycopg2 recommended for Postgres)
+psycopg2-binary>=2.9.0 # For PostgreSQL
+# mysql-connector-python>=8.0.0 # For MySQL
+# SQLAlchemy>=1.4.0 # ORM (optional, can work with multiple DBs)
+
+# TUI (Optional - Uncomment if using)
+# textual>=0.10.0
+
+# Other Utilities
+PyYAML>=5.4.1 # YAML parser
+Jinja2>=3.0.0 # Recommended for prompt templating
+textual>=0.50.0 # For TUI

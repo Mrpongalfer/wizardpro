@@ -1,0 +1,51 @@
+{
+    "project_id": "test001",
+    "initial_request": "Create a single python function that adds two numbers.",
+    "refined_requirements": {
+        "status": "NeedsUserInput",
+        "requirements_summary": "Create a basic function that takes in two numbers as input and returns their sum.",
+        "features": [],
+        "non_functional": [],
+        "target_users": "",
+        "assumptions": [],
+        "outstanding_questions": [
+            "Are you looking for any specific input validation requirements?",
+            "Should the function handle negative numbers or decimals?"
+        ],
+        "error": null,
+        "parsing_status": "NeedsUserInput"
+    },
+    "architecture_document": {},
+    "technology_stack": [],
+    "generated_code": {},
+    "code_analysis": [],
+    "unit_tests": {},
+    "test_results": [],
+    "debugging_info": [],
+    "deployment_config": {},
+    "documentation": {},
+    "current_phase": "Phase1_Requirements",
+    "status": "NeedsInput",
+    "knowledge_graph": {},
+    "error_log": [],
+    "selected_wrappers": [],
+    "user_feedback": [],
+    "llm_call_history": [
+        {
+            "text": "That sounds like a simple and straightforward project! Just to clarify, are you looking to create a basic function that takes in two numbers as input and returns their sum?",
+            "model_identifier": "gpt-3.5-turbo",
+            "cost": null,
+            "latency_ms": 1691.1923750303686,
+            "error": null,
+            "finish_reason": "stop"
+        },
+        {
+            "text": "{\n  \"status\": \"NeedsUserInput\",\n  \"requirements_summary\": \"Create a basic function that takes in two numbers as input and returns their sum.\",\n  \"features\": [],\n  \"non_functional\": [],\n  \"target_users\": \"\",\n  \"assumptions\": [],\n  \"outstanding_questions\": [\"Are you looking for any specific input validation requirements?\", \"Should the function handle negative numbers or decimals?\"],\n  \"error\": null\n}",
+            "model_identifier": "gpt-3.5-turbo",
+            "cost": null,
+            "latency_ms": 1142.1609050012194,
+            "error": null,
+            "finish_reason": "stop"
+        }
+    ]
+}
