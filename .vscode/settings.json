@@ -1,0 +1,67 @@
+{
+    // --- Python Settings ---
+    // Set the default interpreter to the project's venv
+    "python.defaultInterpreterPath": "${workspaceFolder}/orchestrator/venv/bin/python",
+    // Enable formatters (using Black here)
+    "python.formatting.provider": "black",
+    "editor.formatOnSave": true,
+    // Enable linting (using Flake8)
+    "python.linting.enabled": true,
+    "python.linting.flake8Enabled": true,
+    "python.linting.flake8Path": "${workspaceFolder}/orchestrator/venv/bin/flake8", // Explicit path often helps
+    "python.linting.lintOnSave": true,
+    // Enable type checking (using MyPy)
+    "python.analysis.typeCheckingMode": "basic", // Or "strict"
+    // Use workspaceFolder path for mypy daemon to avoid permission issues in venv
+    "python.analysis.mypyArgs": [
+        "--cache-dir=${workspaceFolder}/.vscode/.mypy_cache"
+    ],
+
+    // --- General Editor Settings ---
+    "editor.rulers": [88, 100], // Common line length guides
+    "files.insertFinalNewline": true,
+    "files.trimTrailingWhitespace": true,
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "**/__pycache__": true, // Exclude python cache
+        "**/.pytest_cache": true,
+        "**/.mypy_cache": true,
+        "**/.ruff_cache": true,
+        "orchestrator/venv": true, // Exclude venv from file explorer
+        "project_contexts": true   // Exclude contexts from file explorer
+    },
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/bower_components": true,
+        "**/*.code-search": true,
+        "**/orchestrator/venv": true, // Exclude venv from search
+        "**/project_contexts": true
+    },
+
+    // --- Terminal Settings (for integrated terminal) ---
+    // Automatically activate the venv in integrated terminals (requires Python ext)
+    "python.terminal.activateEnvironment": true,
+    // Use Fish if installed and desired for integrated terminal
+    // "terminal.integrated.defaultProfile.linux": "fish",
+    // "terminal.integrated.profiles.linux": {
+    //    "fish": {
+    //        "path": "/usr/bin/fish", // Verify path if needed
+    //        "args": ["-l"]
+    //    }
+    // },
+
+    // --- Textual TUI Dev Setting (Optional) ---
+    "[python]": {
+        // If using textual-dev, auto-format imports etc.
+        // "editor.defaultFormatter": "ms-python.black-formatter", // Already set above
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit",
+            "source.organizeImports": "explicit"
+        }
+    }
+}

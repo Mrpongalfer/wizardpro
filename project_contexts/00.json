@@ -1,0 +1,51 @@
+{
+    "project_id": "00",
+    "initial_request": "create a simple flask app with one route",
+    "refined_requirements": {
+        "status": "NeedsUserInput",
+        "requirements_summary": null,
+        "features": [],
+        "non_functional": [],
+        "target_users": "",
+        "assumptions": [],
+        "outstanding_questions": [
+            "What will be the purpose of the route in your Flask app? Will it be displaying information, collecting user input, or something else?"
+        ],
+        "error": null,
+        "parsing_status": "NeedsUserInput"
+    },
+    "architecture_document": {},
+    "technology_stack": [],
+    "generated_code": {},
+    "code_analysis": [],
+    "unit_tests": {},
+    "test_results": [],
+    "debugging_info": [],
+    "deployment_config": {},
+    "documentation": {},
+    "current_phase": "Phase1_Requirements",
+    "status": "NeedsUserInput",
+    "knowledge_graph": {},
+    "error_log": [],
+    "selected_wrappers": [],
+    "user_feedback": [],
+    "latest_user_response": null,
+    "llm_call_history": [
+        {
+            "text": "That sounds like a good starting point for a project! What will be the purpose of the route in your Flask app? Will it be displaying information, collecting user input, or something else?",
+            "model_identifier": "gpt-3.5-turbo",
+            "cost": null,
+            "latency_ms": 750.3547180094756,
+            "error": null,
+            "finish_reason": "stop"
+        },
+        {
+            "text": "{\n  \"status\": \"NeedsUserInput\",\n  \"requirements_summary\": null,\n  \"features\": [],\n  \"non_functional\": [],\n  \"target_users\": \"\",\n  \"assumptions\": [],\n  \"outstanding_questions\": [\n    \"What will be the purpose of the route in your Flask app? Will it be displaying information, collecting user input, or something else?\"\n  ],\n  \"error\": null\n}",
+            "model_identifier": "gpt-3.5-turbo",
+            "cost": null,
+            "latency_ms": 1112.2643830021843,
+            "error": null,
+            "finish_reason": "stop"
+        }
+    ]
+}

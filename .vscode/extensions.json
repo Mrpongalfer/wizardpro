@@ -1,0 +1,27 @@
+{
+    "recommendations": [
+        // Core Development
+        "ms-python.python", // Python language support, debugging, linting, etc.
+        "ms-python.flake8", // Flake8 linter integration
+        "ms-python.mypy-type-checker", // MyPy type checker integration
+        "ms-python.black-formatter", // Black code formatter
+        "eamodio.gitlens", // Enhanced Git capabilities
+        "github.vscode-pull-request-github", // GitHub PR integration
+        "redhat.vscode-yaml", // YAML language support
+
+        // Remote Development (Must be installed locally, good to recommend)
+        "ms-vscode-remote.remote-ssh",
+        "ms-vscode-remote.remote-ssh-edit",
+
+        // Docker & Containers
+        "ms-azuretools.vscode-docker", // Docker integration
+        "ms-vscode-remote.remote-containers", // For Dev Containers (useful later)
+
+        // Textual TUI Development (Optional but helpful)
+        "textualize.textual-dev"
+
+        // Add other useful extensions, e.g.:
+        // "ms-vscode.makefile-tools",
+        // "streetsidesoftware.code-spell-checker"
+    ]
+}

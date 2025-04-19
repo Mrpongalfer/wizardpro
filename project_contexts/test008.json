@@ -1,0 +1,52 @@
+{
+    "project_id": "test008",
+    "initial_request": "Create a simple flask app with one route",
+    "refined_requirements": {
+        "status": "NeedsUserInput",
+        "requirements_summary": "To gather more information about the purpose of the Flask app and target audience.",
+        "features": [],
+        "non_functional": [],
+        "target_users": "",
+        "assumptions": [],
+        "outstanding_questions": [
+            "What is the purpose of the Flask app?",
+            "Who is the target audience?"
+        ],
+        "error": null,
+        "parsing_status": "NeedsUserInput"
+    },
+    "architecture_document": {},
+    "technology_stack": [],
+    "generated_code": {},
+    "code_analysis": [],
+    "unit_tests": {},
+    "test_results": [],
+    "debugging_info": [],
+    "deployment_config": {},
+    "documentation": {},
+    "current_phase": "Phase1_Requirements",
+    "status": "Error",
+    "knowledge_graph": {},
+    "error_log": [],
+    "selected_wrappers": [],
+    "user_feedback": [],
+    "latest_user_response": null,
+    "llm_call_history": [
+        {
+            "text": "That sounds like a good starting point! Can you tell me more about the purpose of this flask app and who your target audience is?",
+            "model_identifier": "gpt-3.5-turbo",
+            "cost": null,
+            "latency_ms": 1288.5444090352394,
+            "error": null,
+            "finish_reason": "stop"
+        },
+        {
+            "text": "{\n  \"status\": \"NeedsUserInput\",\n  \"requirements_summary\": \"To gather more information about the purpose of the Flask app and target audience.\",\n  \"features\": [],\n  \"non_functional\": [],\n  \"target_users\": \"\",\n  \"assumptions\": [],\n  \"outstanding_questions\": [\"What is the purpose of the Flask app?\", \"Who is the target audience?\"],\n  \"error\": null\n}",
+            "model_identifier": "gpt-3.5-turbo",
+            "cost": null,
+            "latency_ms": 1107.9993449966423,
+            "error": null,
+            "finish_reason": "stop"
+        }
+    ]
+}

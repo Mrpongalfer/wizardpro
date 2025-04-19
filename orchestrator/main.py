@@ -5,6 +5,7 @@ import importlib
 import argparse
 from typing import List, Type, Optional
 
+# Relative imports work when run with python -m
 from .core.data_types import ProjectContext
 from .core.prompts import PromptManager
 from .core.llm_tools import LLMFactory
@@ -86,61 +87,62 @@ class Orchestrator:
                  phase_keys = [p(self.prompt_manager, self.llm_factory).phase_name_key for p in self.phase_sequence]
                  current_phase_index = phase_keys.index(context.current_phase)
                  if context.status == "PhaseComplete": current_phase_index += 1 # Start next phase after a completed one
+                 elif context.status == "Error": # Don't resume if already errored
+                     logger.warning(f"Attempting to resume project {project_id} which is in Error state. Returning context.")
+                     return context
+                 # If status is NeedsUserInput or Running, current_phase_index is correct to re-run current phase
             except ValueError: logger.error(f"Loaded unknown phase '{context.current_phase}'. Starting from 0."); current_phase_index = 0
 
-        if current_phase_index >= len(self.phase_sequence) and context.status != "Error":
-             # If already past the last phase index AND not errored, consider it complete.
-             logger.info(f"Workflow for project {context.project_id} already completed. Status: {context.status}")
-             context.update_status("Complete") # Ensure status is 'Complete' if resuming after Phase 5 success
+        if current_phase_index >= len(self.phase_sequence):
+             logger.info(f"Workflow for project {context.project_id} already completed or beyond last phase.")
+             # Ensure final status is correct if we loaded a completed state
+             if context.status != "Error": context.update_status("Complete")
              return context
 
-        # --- Corrected Main Workflow Loop ---
+        # --- CORRECTED Main Workflow Loop ---
         logger.info(f"Starting workflow execution from phase index {current_phase_index}.")
         while current_phase_index < len(self.phase_sequence):
             phase_class = self.phase_sequence[current_phase_index]; phase_instance = None
             try:
                 phase_instance = phase_class(self.prompt_manager, self.llm_factory); phase_name_key = phase_instance.phase_name_key
                 logger.info(f"--- Executing Phase: {phase_name_key} ---")
-                context = phase_instance.run(context) # Run phase logic
+                # Run phase logic - phase is responsible for setting context.status
+                context = phase_instance.run(context)
                 self._save_context(context) # Save state *after* phase attempt
 
-                # Check status set by the phase.run() method
+                # --- Check status set by the phase ---
                 if context.status == "Error":
-                    logger.error(f"Workflow halted: Error occurred in phase {phase_name_key}")
+                    logger.error(f"Workflow halted: Error reported by phase {phase_name_key}")
                     break # Stop workflow on error
-                elif context.status == "NeedsInput":
+                elif context.status == "NeedsUserInput":
                     logger.info(f"Workflow paused: Needs input in phase {phase_name_key}")
-                    break # Stop workflow for input
+                    break # Stop workflow for input (TUI will handle resume)
                 elif context.status == "PhaseComplete":
                     logger.info(f"Phase '{phase_name_key}' completed successfully.")
                     current_phase_index += 1 # Increment index to move to next phase
-                    # Loop will naturally terminate if this was the last phase
+                    # Check if this just completed the *last* phase
+                    if current_phase_index == len(self.phase_sequence):
+                         logger.info("All phases completed.")
+                         context.update_status("Complete") # Set final overall status
+                         self._save_context(context)
+                         # Loop condition will now be false, natural exit
                 else:
-                    # If status is something else (e.g., still "Running", or unexpected value)
-                    logger.warning(f"Phase '{phase_name_key}' ended with unexpected status: '{context.status}'. Treating as error and halting.")
-                    context.update_status("Error", current_phase=phase_name_key) # Explicitly set error status
-                    self._save_context(context) # Save the error state
+                    # Only truly unexpected status strings should land here
+                    logger.error(f"Phase '{phase_name_key}' returned unexpected status: '{context.status}'. Halting.")
+                    context.update_status("Error", current_phase=phase_name_key) # Set error status
+                    self._save_context(context) # Save error state
                     break
 
             except Exception as e:
-                 # Catch critical errors during phase instantiation or unexpected exceptions from run()
                  phase_name_for_log = phase_instance.phase_name_key if phase_instance else f"Index {current_phase_index}"
                  logger.critical(f"Critical orchestrator error during phase '{phase_name_for_log}': {e}", exc_info=True)
                  if context: context.add_log_entry(phase_name_for_log, "CRITICAL", "Orchestrator exception", str(e)); context.update_status("Error", phase_name_for_log); self._save_context(context)
                  break # Halt workflow on critical errors
 
         # --- End Workflow Loop ---
-
-        # Set final overall status if loop completed naturally
-        if current_phase_index >= len(self.phase_sequence) and context.status != "Error" and context.status != "NeedsInput":
-             context.update_status("Complete")
-             logger.info(f"All phases completed. Final project status set to: {context.status}")
-             self._save_context(context) # Save final complete state
-
-
-        final_status = context.status if context else "Unknown"; final_project_id = context.project_id if context else project_id or "Unknown"
+        final_status = context.status if context else "Unknown (Context Error)"; final_project_id = context.project_id if context else project_id or "Unknown"
         logger.info(f"--- Workflow Execution Finished for Project ID: {final_project_id} ---"); logger.info(f"Final Status: {final_status}")
-        if context: logger.info(f"Ended at Phase: {context.current_phase}")
+        if context: logger.info(f"Ended at Phase: {context.current_phase}") # Will show Phase1 if NeedsInput, Phase5 if Complete/Error in Phase5
         return context
 
 
@@ -160,23 +162,29 @@ if __name__ == "__main__":
     logger.debug(f"Args: {args}")
 
     final_context = None
-    exit_code = 0
+    exit_code = 0 # Default to success
     try:
         from . import config as cfg # Relative import
         if not hasattr(cfg, 'PROMPT_DIR_PATH') or not os.path.isdir(cfg.PROMPT_DIR_PATH): logger.critical(f"Prompt directory path invalid: {getattr(cfg, 'PROMPT_DIR_PATH', 'Not Found')}."); exit(1)
         orchestrator = Orchestrator(config_module=cfg)
         final_context = orchestrator.run_workflow(initial_user_request=args.initial_request, project_id=args.project_id, resume=args.resume, selected_wrappers=args.wrapper)
-        # Check final status for exit code MORE accurately
-        if final_context and final_context.status != "Complete":
-             exit_code = 1 # Any status other than Complete is considered non-zero exit
+        # --- Corrected Exit Code Logic ---
+        if final_context and final_context.status == "Complete":
+             exit_code = 0 # Success ONLY if fully complete
+        elif final_context and final_context.status == "NeedsUserInput":
+             logger.info("Workflow paused awaiting user input.")
+             exit_code = 0 # Treat pause for input as clean exit for CLI runner for now
+        else:
+             # Any other status (Error, or unexpected halt) is non-zero exit
+             exit_code = 1
+        # --- End Exit Code Logic ---
 
-    # (Error handling unchanged)
     except ImportError as e: logger.critical(f"Import Error: {e}", exc_info=True); exit_code = 1
     except FileNotFoundError as e: logger.critical(f"Failed to resume: {e}"); exit_code = 1
     except ValueError as e: logger.critical(f"Config/Arg Error: {e}"); exit_code = 1
     except Exception as e: logger.critical(f"Unexpected error: {e}", exc_info=True); exit_code = 1
 
-    # (Final summary unchanged)
+    # Final summary (unchanged)
     if final_context:
         logger.info("--- Workflow Execution Summary ---"); logger.info(f"Project ID: {final_context.project_id}"); logger.info(f"Final Status: {final_context.status}"); logger.info(f"Final Phase: {final_context.current_phase}"); logger.info(f"Activated Wrappers: {final_context.selected_wrappers}"); logger.info(f"Generated Files Count: {len(final_context.generated_code)}"); logger.info(f"LLM Calls Made: {len(final_context.llm_call_history)}"); logger.info(f"Error Log Entries: {len(final_context.error_log)}")
         if final_context.status == "Error" or final_context.error_log: logger.warning("Workflow ended with errors.")

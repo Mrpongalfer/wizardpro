@@ -1,0 +1,29 @@
+{
+    "project_id": "test-tui-final",
+    "initial_request": "Create a simple python function that adds two numbers.",
+    "refined_requirements": {},
+    "architecture_document": {},
+    "technology_stack": [],
+    "generated_code": {},
+    "code_analysis": [],
+    "unit_tests": {},
+    "test_results": [],
+    "debugging_info": [],
+    "deployment_config": {},
+    "documentation": {},
+    "current_phase": "Phase2_Architecture",
+    "status": "Error",
+    "knowledge_graph": {},
+    "error_log": [
+        {
+            "timestamp": "2025-04-19T09:12:29.595131+00:00",
+            "phase": "Phase2_Architecture",
+            "level": "ERROR",
+            "message": "Refined requirements missing or invalid for Phase 2."
+        }
+    ],
+    "selected_wrappers": [],
+    "user_feedback": [],
+    "latest_user_response": null,
+    "llm_call_history": []
+}

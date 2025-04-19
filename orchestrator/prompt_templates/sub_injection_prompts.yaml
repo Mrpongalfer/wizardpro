@@ -131,3 +131,118 @@ ProcessUserResponse: |-
 
   Maintain a conversational tone. Remember that your output (whether questions or requirement summaries) will be analyzed and parsed by another AI component later, so clarity is helpful. Focus on making progress towards well-defined requirements.
 
+
+
+ParseCodeFilesJSON: |-
+  **Sub-Task: Parse Code Files into JSON**
+  You are a data extraction specialist AI. Analyze the following text, which is raw output from a code generation AI.
+  The text should contain one or more code blocks, each preceded by a file path marker line like '--- File: path/to/filename.ext ---' and followed by '--- End File ---'. Inside these markers should be a standard Markdown code block like ```language ... ```.
+
+  Your objective is to extract ALL file paths and their corresponding complete, raw code content.
+  Present the extracted information STRICTLY as a single, valid JSON object where:
+  - Keys are the relative file paths (e.g., "src/app.py", "static/style.css").
+  - Values are the raw string content of the code for that file.
+
+  Example JSON output format:
+  {
+    "src/main.py": "print('Hello')\n# More code...",
+    "requirements.txt": "flask\nrequests"
+  }
+
+  If the text contains code blocks but they are NOT preceded by the correct '--- File: ... ---' markers, attempt to extract the language and content of the first block found and return JSON like:
+  {"parsing_warning": "File path markers missing", "file_path_placeholder": "unknown_file.<lang_or_txt>", "code": "..."}
+
+  If no code blocks or file markers are found, or the input seems invalid, return JSON:
+  {"error": "Could not parse valid code file blocks"}
+
+  Raw Text to Analyze:
+  --- START TEXT ---
+  {{ raw_llm_output | default('[No Input Text Provided]') }}
+  --- END TEXT ---
+
+  Respond ONLY with the valid JSON object. Do not include explanations or apologies.
+
+
+
+ParseCodeFilesJSON: |-
+  **Sub-Task: Parse Code Files into JSON**
+  You are a data extraction specialist AI. Analyze the following text, which is raw output from a code generation AI.
+  The text should contain one or more code blocks, each preceded by a file path marker line like '--- File: path/to/filename.ext ---' and followed by '--- End File ---'. Inside these markers should be a standard Markdown code block like ```language ... ```.
+
+  Your objective is to extract ALL file paths and their corresponding complete, raw code content.
+  Present the extracted information STRICTLY as a single, valid JSON object where:
+  - Keys are the relative file paths (e.g., "src/app.py", "static/style.css").
+  - Values are the raw string content of the code for that file.
+
+  Example JSON output format:
+  {
+    "src/main.py": "print('Hello')\n# More code...",
+    "requirements.txt": "flask\nrequests"
+  }
+
+  If the text contains code blocks but they are NOT preceded by the correct '--- File: ... ---' markers, attempt to extract the language and content of the first block found and return JSON like:
+  {"parsing_warning": "File path markers missing", "file_path_placeholder": "unknown_file.<lang_or_txt>", "code": "..."}
+
+  If no code blocks or file markers are found, or the input seems invalid, return JSON:
+  {"error": "Could not parse valid code file blocks"}
+
+  Raw Text to Analyze:
+  --- START TEXT ---
+  {{ raw_llm_output | default('[No Input Text Provided]') }}
+  --- END TEXT ---
+
+  Respond ONLY with the valid JSON object. Do not include explanations or apologies.
+
+
+
+ParseTestResultsJSON: |-
+  **Sub-Task: Parse Testing & Debugging Output into JSON**
+  You are a data extraction specialist AI. Analyze the following text, which is raw output from a Quality Assurance AI that analyzed code, requirements, and potentially ran tests.
+  Your objective is to extract structured information about test outcomes, identified bugs, and suggested fixes or corrected code.
+  Present the extracted details STRICTLY as a single, valid JSON object. Do NOT include any text before or after the JSON object.
+  The JSON object should have the following top-level keys (use null or empty lists/strings/objects if information is not present):
+    - "status": (string) Indicate overall status. Use "TestsPassed" if no major issues found, "BugsFound" if issues require fixing, "NeedsReview" if output is unclear, "Error" if input is unusable.
+    - "test_results_summary": (string) A brief natural language summary of the testing outcomes.
+    - "bugs_found": (list of objects) List identified bugs. Each object could have keys like "description" (string), "file_path" (string, optional), "severity" (string, optional).
+    - "suggested_fixes": (list of strings) List suggested fixes or debugging steps.
+    - "generated_tests": (object, optional) A dictionary where keys are test file paths and values are the generated test code strings, IF tests were generated in the raw output.
+    - "corrected_code": (object, optional) A dictionary where keys are file paths and values are corrected code snippets IF provided in the raw output.
+    - "error": (string, optional) Describe error if parsing failed completely.
+
+  Raw Text to Analyze:
+  --- START TEXT ---
+  {{ raw_llm_output | default('[No Input Text Provided]') }}
+  --- END TEXT ---
+
+  Respond ONLY with the valid JSON object.
+
+
+ParseDeploymentArtifactsJSON: |-
+  **Sub-Task: Parse Deployment Artifacts and Documentation into JSON**
+  You are a data extraction specialist AI. Analyze the following text, which is raw output from a DevOps AI that generated deployment configurations (like Dockerfiles, CI/CD pipelines) and documentation (like READMEs).
+  The text should contain one or more files, likely marked with '--- File: path/to/filename.ext ---' followed by a code block ```...``` and '--- End File ---'.
+
+  Your objective is to extract ALL file paths and their corresponding complete, raw content.
+  Present the extracted information STRICTLY as a single, valid JSON object where:
+  - Keys are the relative file paths (e.g., "Dockerfile", "README.md", ".github/workflows/deploy.yaml").
+  - Values are the raw string content of the file.
+
+  Example JSON output format:
+  {
+    "Dockerfile": "FROM python:3.11-slim\nWORKDIR /app\n...",
+    "README.md": "# My Project\nThis project does...",
+    ".github/workflows/deploy.yaml": "name: Deploy\non:\n push:\n branches:\n - main\n..."
+  }
+
+  If the text contains file content but the markers are missing or inconsistent, make a best effort to identify logical files (like a Dockerfile, a README) and return them using plausible filenames as keys in the JSON. Add a key "parsing_warning": "File markers missing or inconsistent" to the JSON output in this case.
+
+  If no recognizable files or artifacts are found, return JSON:
+  {"error": "Could not parse valid deployment/documentation files"}
+
+  Raw Text to Analyze:
+  --- START TEXT ---
+  {{ raw_llm_output | default('[No Input Text Provided]') }}
+  --- END TEXT ---
+
+  Respond ONLY with the valid JSON object. Do not include explanations or apologies.
+
