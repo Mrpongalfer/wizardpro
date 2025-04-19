@@ -20,3 +20,5 @@ psycopg2-binary>=2.9.0 # For PostgreSQL
 PyYAML>=5.4.1 # YAML parser
 Jinja2>=3.0.0 # Recommended for prompt templating
 textual>=0.50.0 # For TUI
+flake8>=7.0.0 # Linter
+mypy>=1.8.0 # Static Type Checker
