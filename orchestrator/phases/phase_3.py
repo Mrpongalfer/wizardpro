@@ -288,19 +288,137 @@ class Phase3(Phase):
     def _analyze_code_quality(
         self, file_path: str, code_content: str, context: "ProjectContext"
     ) -> Tuple[bool, str, Optional[str]]:
-        # (Placeholder implementation unchanged)
-        logger.debug(f"Placeholder analysis for file: {file_path}")
-        attempt_number = sum(
-            1
-            for log in context.llm_call_history
-            if log.get("input_prompt", "").startswith(f"**Sub-Task")
-            and file_path in log.get("input_prompt", "")
+        """
+        Analyzes the quality of a given code snippet using an LLM sub-injection.
+
+        Args:
+            file_path: The path of the file being analyzed.
+            code_content: The actual code content to analyze.
+            context: The current ProjectContext (needed for _call_llm and context vars).
+
+        Returns:
+            Tuple: (needs_refinement: bool, analysis_details: str, suggested_sub_injection: Optional[str])
+                   Returns (False, "Analysis OK", None) on success if quality is good.
+                   Returns (True, "Details", "ActionKey") if refinement needed.
+                   Returns (True, "Error Details", "RefactorCode") if analysis itself failed (fallback action).
+        """
+        logger.info(f"Analyzing code quality via LLM for: {file_path}")
+
+        # Prepare data for the analysis prompt template
+        template_data = {
+            "file_path": file_path,
+            "language": file_path.split(".")[-1]
+            or "unknown",  # Basic language detection
+            "code_to_analyze": code_content,
+            # The prompt template 'AnalyzeCodeQuality' accesses the full context via 'ctx.'
+            # No need to pass requirements/arch explicitly here if prompt uses ctx.
+        }
+
+        # Call the LLM using the analysis sub-injection prompt
+        analysis_llm_output: Optional[LLMOutput] = self._call_llm(
+            context=context,
+            prompt_key="AnalyzeCodeQuality",  # Key from sub_injection_prompts.yaml
+            is_sub_injection=True,
+            template_data=template_data,
+            # Consider using a more powerful model for analysis?
+            # model_identifier="gpt-4" # Or another preferred model if available
         )
-        if file_path.endswith(".py") and attempt_number < 1:
-            logger.warning(f"Placeholder: Suggesting 'RefactorCode' for {file_path}")
-            analysis_details = "Placeholder: Suggest basic refactor."
-            suggested_sub_injection = "RefactorCode"
-            return True, analysis_details, suggested_sub_injection
-        else:
-            analysis_details = "Placeholder: Analysis passed."
-            return False, analysis_details, None
+
+        # Default return values in case of failure during analysis call/parsing
+        needs_refinement = True  # Default to needing refinement if analysis fails
+        analysis_details = (
+            "Code analysis sub-injection failed or produced invalid output."
+        )
+        suggested_action = "RefactorCode"  # Default fallback action
+
+        if not analysis_llm_output or analysis_llm_output.error:
+            logger.error(
+                f"Code quality analysis LLM call failed for {file_path}: {analysis_llm_output.error if analysis_llm_output else 'Unknown reason'}"
+            )
+            analysis_details = f"Analysis LLM call failed: {analysis_llm_output.error if analysis_llm_output else 'Unknown'}"
+            # Return default failure state
+            return needs_refinement, analysis_details, suggested_action
+
+        # Parse the JSON response from the analysis LLM
+        analysis_response_text = analysis_llm_output.text
+        try:
+            logger.debug(f"Attempting to parse analysis JSON for {file_path}")
+            # Basic cleanup for potential markdown wrappers
+            if analysis_response_text.strip().startswith("```json"):
+                analysis_response_text = analysis_response_text.strip()[7:-3].strip()
+            elif analysis_response_text.strip().startswith("```"):
+                analysis_response_text = analysis_response_text.strip()[3:-3].strip()
+
+            analysis_result = json.loads(analysis_response_text)
+
+            if isinstance(analysis_result, dict):
+                # Safely get values from the parsed JSON
+                quality_ok = analysis_result.get(
+                    "quality_ok", False
+                )  # Default to False if key missing
+                details = analysis_result.get(
+                    "analysis_details", "No details provided by analysis."
+                )
+                action = analysis_result.get(
+                    "suggested_action"
+                )  # Will be None if missing or explicitly null
+
+                # Validate types
+                if not isinstance(quality_ok, bool):
+                    logger.warning(
+                        f"Analysis JSON 'quality_ok' is not boolean ({type(quality_ok)}) for {file_path}. Assuming refinement needed."
+                    )
+                    quality_ok = False
+                    details += (
+                        " (Warning: Invalid quality_ok type in analysis response)"
+                    )
+                if not isinstance(details, str):
+                    logger.warning(
+                        f"Analysis JSON 'analysis_details' is not string ({type(details)}) for {file_path}."
+                    )
+                    details = "[Invalid analysis details type]"
+                if action is not None and not isinstance(action, str):
+                    logger.warning(
+                        f"Analysis JSON 'suggested_action' is not string or null ({type(action)}) for {file_path}. Setting action to None."
+                    )
+                    action = None  # Treat invalid action as None
+
+                # Determine return values based on validated parsed data
+                needs_refinement = not quality_ok
+                analysis_details = details
+                suggested_action = (
+                    action if needs_refinement else None
+                )  # Only return action if refinement is needed
+
+                logger.info(
+                    f"Code analysis result for {file_path}: OK={quality_ok}, Action={suggested_action or 'None'}, Details={analysis_details}"
+                )
+                # Return the parsed results
+                return needs_refinement, analysis_details, suggested_action
+
+            else:  # Parsed data is not a dictionary
+                logger.error(
+                    f"Code analysis LLM response was not a valid JSON object for {file_path}."
+                )
+                analysis_details = "Analysis response was not JSON object."
+                # Return default failure state
+                return needs_refinement, analysis_details, suggested_action
+
+        except json.JSONDecodeError as e:
+            logger.error(
+                f"Failed to decode JSON analysis response for {file_path}: {e}"
+            )
+            logger.debug(f"Raw text from analysis LLM: {analysis_response_text}")
+            analysis_details = f"Analysis response JSON decode failed: {e}"
+            # Return default failure state
+            return needs_refinement, analysis_details, suggested_action
+        except Exception as e:
+            logger.error(
+                f"Unexpected error processing analysis response for {file_path}: {e}",
+                exc_info=True,
+            )
+            analysis_details = f"Unexpected error processing analysis: {e}"
+            # Return default failure state
+            return needs_refinement, analysis_details, suggested_action
+
+    # --- END of _analyze_code_quality method ---

@@ -16,9 +16,11 @@
     "python.analysis.mypyArgs": [
         "--cache-dir=${workspaceFolder}/.vscode/.mypy_cache"
     ],
-
     // --- General Editor Settings ---
-    "editor.rulers": [88, 100], // Common line length guides
+    "editor.rulers": [
+        88,
+        100
+    ], // Common line length guides
     "files.insertFinalNewline": true,
     "files.trimTrailingWhitespace": true,
     "files.exclude": {
@@ -33,7 +35,7 @@
         "**/.mypy_cache": true,
         "**/.ruff_cache": true,
         "orchestrator/venv": true, // Exclude venv from file explorer
-        "project_contexts": true   // Exclude contexts from file explorer
+        "project_contexts": true // Exclude contexts from file explorer
     },
     "search.exclude": {
         "**/node_modules": true,
@@ -42,7 +44,6 @@
         "**/orchestrator/venv": true, // Exclude venv from search
         "**/project_contexts": true
     },
-
     // --- Terminal Settings (for integrated terminal) ---
     // Automatically activate the venv in integrated terminals (requires Python ext)
     "python.terminal.activateEnvironment": true,
@@ -54,7 +55,6 @@
     //        "args": ["-l"]
     //    }
     // },
-
     // --- Textual TUI Dev Setting (Optional) ---
     "[python]": {
         // If using textual-dev, auto-format imports etc.
@@ -62,6 +62,13 @@
         "editor.codeActionsOnSave": {
             "source.fixAll": "explicit",
             "source.organizeImports": "explicit"
-        }
-    }
+        },
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+    "python.terminal.shellIntegration.enabled": true,
+    "python.testing.pytestEnabled": true,
+    "notebook.defaultFormatter": "ms-python.black-formatter",
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "files.autoSave": "afterDelay",
+    "editor.bracketPairColorization.independentColorPoolPerBracketType": true
 }

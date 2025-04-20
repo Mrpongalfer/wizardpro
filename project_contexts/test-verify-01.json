@@ -1,0 +1,52 @@
+{
+    "project_id": "test-verify-01",
+    "initial_request": "Test run after Phase 1 update",
+    "refined_requirements": {
+        "status": "NeedsUserInput",
+        "requirements_summary": null,
+        "features": [],
+        "non_functional": [],
+        "target_users": null,
+        "assumptions": [],
+        "outstanding_questions": [
+            "What does the Phase 1 update entail?",
+            "What specific tests are you looking to run in the test run after the update?"
+        ],
+        "error": null,
+        "parsing_status": "NeedsUserInput"
+    },
+    "architecture_document": {},
+    "technology_stack": [],
+    "generated_code": {},
+    "code_analysis": [],
+    "unit_tests": {},
+    "test_results": [],
+    "debugging_info": [],
+    "deployment_config": {},
+    "documentation": {},
+    "current_phase": "Phase1_Requirements",
+    "status": "NeedsUserInput",
+    "knowledge_graph": {},
+    "error_log": [],
+    "selected_wrappers": [],
+    "latest_user_response": null,
+    "user_feedback": [],
+    "llm_call_history": [
+        {
+            "text": "That sounds like an interesting project! Could you please provide more details about what the Phase 1 update entails and what specific tests you are looking to run in the test run after the update? This will help me understand the scope of the project and any requirements you may have in mind.",
+            "model_identifier": "gpt-3.5-turbo",
+            "cost": null,
+            "latency_ms": 1657.5906170182861,
+            "error": null,
+            "finish_reason": "stop"
+        },
+        {
+            "text": "{\n    \"status\": \"NeedsUserInput\",\n    \"requirements_summary\": null,\n    \"features\": [],\n    \"non_functional\": [],\n    \"target_users\": null,\n    \"assumptions\": [],\n    \"outstanding_questions\": [\n        \"What does the Phase 1 update entail?\",\n        \"What specific tests are you looking to run in the test run after the update?\"\n    ],\n    \"error\": null\n}",
+            "model_identifier": "gpt-3.5-turbo",
+            "cost": null,
+            "latency_ms": 1235.4614360374399,
+            "error": null,
+            "finish_reason": "stop"
+        }
+    ]
+}

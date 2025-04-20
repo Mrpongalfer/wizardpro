@@ -1,0 +1,55 @@
+{
+    "project_id": "23",
+    "initial_request": "\"I want a system to manage tasks.\"",
+    "refined_requirements": {
+        "status": "NeedsUserInput",
+        "requirements_summary": "Develop a task management system",
+        "features": [
+            "Task prioritization",
+            "Deadline tracking",
+            "Collaboration capabilities"
+        ],
+        "non_functional": [],
+        "target_users": "",
+        "assumptions": [],
+        "outstanding_questions": [
+            "Do you have any specific preferences for user interface design?",
+            "What is the expected scale of users for this system?"
+        ],
+        "parsing_status": "NeedsUserInput"
+    },
+    "architecture_document": {},
+    "technology_stack": [],
+    "generated_code": {},
+    "code_analysis": [],
+    "unit_tests": {},
+    "test_results": [],
+    "debugging_info": [],
+    "deployment_config": {},
+    "documentation": {},
+    "current_phase": "Phase1_Requirements",
+    "status": "NeedsUserInput",
+    "knowledge_graph": {},
+    "error_log": [],
+    "selected_wrappers": [],
+    "latest_user_response": null,
+    "user_feedback": [],
+    "llm_call_history": [
+        {
+            "text": "That sounds like a great idea! To better understand your needs, could you tell me more about the specific features you envision for this task management system? For example, do you have a preference for task prioritization, deadline tracking, collaboration capabilities, or any other specific functionalities?",
+            "model_identifier": "gpt-3.5-turbo",
+            "cost": null,
+            "latency_ms": 1271.6905900160782,
+            "error": null,
+            "finish_reason": "stop"
+        },
+        {
+            "text": "{\n  \"status\": \"NeedsUserInput\",\n  \"requirements_summary\": \"Develop a task management system\",\n  \"features\": [\n    \"Task prioritization\",\n    \"Deadline tracking\",\n    \"Collaboration capabilities\"\n  ],\n  \"non_functional\": [],\n  \"target_users\": \"\",\n  \"assumptions\": [],\n  \"outstanding_questions\": [\n    \"Do you have any specific preferences for user interface design?\",\n    \"What is the expected scale of users for this system?\"\n  ]\n}",
+            "model_identifier": "gpt-3.5-turbo",
+            "cost": null,
+            "latency_ms": 1319.0412219846621,
+            "error": null,
+            "finish_reason": "stop"
+        }
+    ]
+}

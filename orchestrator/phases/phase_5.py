@@ -46,7 +46,6 @@ class Phase5(Phase):
                 return self._handle_error_and_halt(
                     context, f"LLM call failed during {self.phase_name_key}"
                 )
-
             raw_deploy_text = deploy_llm_output.text
             logger.info(
                 "Initial deployment call successful. Now calling LLM for parsing artifacts..."
@@ -61,6 +60,10 @@ class Phase5(Phase):
                 template_data={"raw_llm_output": raw_deploy_text},
             )
 
+            # Initialize/clear relevant context fields
+            context.deployment_config = {}
+            context.documentation = {}
+
             if not parsing_llm_output or parsing_llm_output.error:
                 logger.error(
                     "LLM call for parsing deployment artifacts failed. Storing raw text."
@@ -69,104 +72,168 @@ class Phase5(Phase):
                 context.deployment_config["parsing_status"] = (
                     "Failed - Parsing LLM call error"
                 )
-                # Proceed to complete, but parsing failed
-                context.update_status(
-                    "Complete", current_phase=self.phase_name_key
-                )  # Mark workflow complete here
+            else:
+                # --- 4. Parse JSON output from the AI Parser ---
                 logger.info(
-                    f"WizardPro project '{context.project_id}' finished workflow (parsing failed in Phase 5). Final status: {context.status}"
+                    "Artifact parsing LLM call successful. Attempting to parse JSON response..."
                 )
-                return context
+                parsing_response_text = parsing_llm_output.text
+                parsed_successfully = False
+                try:
+                    # Basic cleanup for potential markdown wrappers
+                    if parsing_response_text.strip().startswith("```json"):
+                        parsing_response_text = parsing_response_text.strip()[
+                            7:-3
+                        ].strip()
+                    elif parsing_response_text.strip().startswith("```"):
+                        parsing_response_text = parsing_response_text.strip()[
+                            3:-3
+                        ].strip()
 
-            # --- 4. Parse JSON output from the AI Parser ---
-            logger.info(
-                "Artifact parsing LLM call successful. Attempting to parse JSON response..."
-            )
-            parsing_response_text = parsing_llm_output.text
-            parsed_successfully = False
-            try:
-                if parsing_response_text.strip().startswith("```json"):
-                    parsing_response_text = parsing_response_text.strip()[7:-3].strip()
-                parsed_data = json.loads(parsing_response_text)
+                    parsed_data = json.loads(parsing_response_text)
 
-                if isinstance(parsed_data, dict):
-                    if parsed_data.get("error"):
-                        logger.error(
-                            f"Artifact parsing LLM reported an error: {parsed_data['error']}"
-                        )
-                        context.documentation["Phase5_RawOutput.md"] = raw_deploy_text
-                        context.deployment_config["parsing_status"] = (
-                            f'Failed - Parser Error: {parsed_data["error"]}'
-                        )
-                    else:
-                        logger.info(
-                            "Successfully parsed JSON artifacts from parsing LLM."
-                        )
-                        if parsed_data.get("parsing_warning"):
-                            logger.warning(
-                                f"Artifact parsing LLM reported: {parsed_data['parsing_warning']}"
+                    if isinstance(parsed_data, dict):
+                        if parsed_data.get("error"):
+                            logger.error(
+                                f"Artifact parsing LLM reported error: {parsed_data['error']}"
+                            )
+                            context.documentation["Phase5_RawOutput.md"] = (
+                                raw_deploy_text
                             )
                             context.deployment_config["parsing_status"] = (
-                                f'Warning - {parsed_data["parsing_warning"]}'
+                                f'Failed - Parser Error: {parsed_data["error"]}'
                             )
-
-                        # Iterate through parsed data and sort into docs vs config
-                        docs = {}
-                        configs = {}
-                        for file_path, content in parsed_data.items():
-                            if file_path in ["error", "parsing_warning"]:
-                                continue  # Skip special keys
-                            if isinstance(file_path, str) and isinstance(content, str):
-                                # Basic sorting logic (can be refined)
-                                if file_path.lower().endswith((".md", ".txt")):
-                                    docs[file_path] = content
-                                else:
-                                    configs[file_path] = content
-                            else:
+                        else:
+                            logger.info(
+                                "Successfully parsed JSON artifacts from parsing LLM."
+                            )
+                            parsing_status = "Success"  # Default status
+                            if parsed_data.get("parsing_warning"):
                                 logger.warning(
-                                    f"Skipping invalid item in parsed artifacts JSON: Key='{file_path}', Type={type(content)}"
+                                    f"Artifact parsing LLM reported: {parsed_data['parsing_warning']}"
+                                )
+                                parsing_status = (
+                                    f'Warning - {parsed_data["parsing_warning"]}'
                                 )
 
-                        context.documentation.update(docs)
-                        context.deployment_config.update(configs)
+                            # Iterate through parsed data and sort into docs vs config
+                            docs = {}
+                            configs = {}
+                            for file_path, content in parsed_data.items():
+                                # Skip special keys potentially added by the parser prompt
+                                if file_path in [
+                                    "error",
+                                    "parsing_warning",
+                                    "parsing_status",
+                                ]:
+                                    continue
+                                if isinstance(file_path, str) and isinstance(
+                                    content, str
+                                ):
+                                    # Basic sorting logic (can be refined)
+                                    if file_path.lower().endswith(
+                                        (".md", ".txt", ".rst")
+                                    ):
+                                        docs[file_path] = content
+                                    # Check for common config files/extensions
+                                    elif file_path.lower() in [
+                                        "dockerfile",
+                                        "docker-compose.yml",
+                                        ".gitlab-ci.yml",
+                                    ] or file_path.endswith(
+                                        (
+                                            ".yaml",
+                                            ".yml",
+                                            ".conf",
+                                            ".ini",
+                                            ".cfg",
+                                            ".json",
+                                            ".xml",
+                                            ".sh",
+                                        )
+                                    ):
+                                        if (
+                                            ".github/workflows/" in file_path.lower()
+                                            or "jenkinsfile" in file_path.lower()
+                                        ):
+                                            configs[file_path] = content
+                                        # Avoid classifying docs as configs if possible
+                                        elif not file_path.lower().endswith(
+                                            (".md", ".txt", ".rst")
+                                        ):
+                                            configs[file_path] = content
+                                        else:
+                                            docs[file_path] = (
+                                                content  # Treat as doc if ambiguous extension
+                                            )
+                                    else:  # Store others as deployment config for now
+                                        logger.info(
+                                            f"Storing unknown file type '{file_path}' in deployment_config."
+                                        )
+                                        configs[file_path] = content
+                                else:
+                                    logger.warning(
+                                        f"Skipping invalid item in parsed artifacts JSON: Key='{file_path}', Type={type(content)}"
+                                    )
+
+                            context.documentation = docs  # Overwrite with parsed docs
+                            context.deployment_config = (
+                                configs  # Overwrite with parsed configs
+                            )
+                            context.deployment_config["parsing_status"] = (
+                                parsing_status  # Store final parsing status
+                            )
+                            logger.info(
+                                f"Stored {len(docs)} documentation files and {len(configs)} deployment config files."
+                            )
+                            parsed_successfully = True
+                    else:  # Parsed data is not a dictionary
+                        logger.error(
+                            "Artifact parsing LLM response was not a valid JSON object."
+                        )
+                        context.documentation["Phase5_RawOutput_InvalidJSON.txt"] = (
+                            parsing_response_text
+                        )
                         context.deployment_config["parsing_status"] = (
-                            "Success"  # Mark overall parsing success
+                            "Failed - Invalid JSON from parser"
                         )
-                        logger.info(
-                            f"Stored {len(docs)} documentation files and {len(configs)} deployment config files."
-                        )
-                        parsed_successfully = True
 
-                else:  # Parsed data is not a dictionary
+                except json.JSONDecodeError as e:
                     logger.error(
-                        "Artifact parsing LLM response was not a valid JSON object."
+                        f"Failed to decode JSON from artifact parsing LLM response: {e}"
                     )
-                    context.documentation["Phase5_RawOutput.md"] = raw_deploy_text
+                    logger.debug(f"Raw text from parsing LLM: {parsing_response_text}")
+                    context.documentation["Phase5_RawOutput_JSONDecodeError.txt"] = (
+                        parsing_response_text
+                    )
                     context.deployment_config["parsing_status"] = (
-                        "Failed - Invalid JSON from parser"
+                        "Failed - JSONDecodeError"
+                    )
+                except Exception as e:
+                    logger.error(
+                        f"Unexpected error processing artifact parsing LLM response: {e}",
+                        exc_info=True,
+                    )
+                    context.documentation["Phase5_RawOutput_Exception.txt"] = (
+                        parsing_response_text
+                    )
+                    context.deployment_config["parsing_status"] = (
+                        f"Failed - Unexpected processing error: {e}"
                     )
 
-            except json.JSONDecodeError as e:
-                logger.error(
-                    f"Failed to decode JSON from artifact parsing LLM response: {e}"
+            # Ensure some placeholders exist if maps are still empty
+            if not context.deployment_config:
+                context.deployment_config["placeholder"] = (
+                    "Deployment config not parsed/found."
                 )
-                logger.debug(f"Raw text from parsing LLM: {parsing_response_text}")
-                context.documentation["Phase5_RawOutput.md"] = raw_deploy_text
-                context.deployment_config["parsing_status"] = "Failed - JSONDecodeError"
-            except Exception as e:
-                logger.error(
-                    f"Unexpected error processing artifact parsing LLM response: {e}",
-                    exc_info=True,
-                )
-                context.documentation["Phase5_RawOutput.md"] = raw_deploy_text
-                context.deployment_config["parsing_status"] = (
-                    f"Failed - Unexpected processing error: {e}"
-                )
+            if not context.documentation:
+                context.documentation["placeholder"] = "Documentation not parsed/found."
 
             # Log summary
             logger.debug(f"Stored docs: {list(context.documentation.keys())}")
             logger.debug(f"Stored configs: {list(context.deployment_config.keys())}")
 
+            # --- End Phase 5 AI Parsing Logic ---
             # --- End Phase 5 Logic ---
 
             # 5. Final status update

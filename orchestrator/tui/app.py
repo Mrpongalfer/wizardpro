@@ -121,7 +121,7 @@ class WizardProTUI(App):
         """Configure logging and focus input on app mount."""
         # Correct logging setup from previous steps
         log_widget = self.query_one(Log)
-        textual_handler = TextualHandler(log_widget)
+        textual_handler = TextualHandler(target=log_widget)
         formatter = logging.Formatter(
             "%(asctime)s|%(levelname)s|%(name)s:%(lineno)d| %(message)s",
             datefmt="%H:%M:%S",

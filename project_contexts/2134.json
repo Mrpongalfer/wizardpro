@@ -1,0 +1,51 @@
+{
+    "project_id": "2134",
+    "initial_request": "help me",
+    "refined_requirements": {
+        "status": "NeedsUserInput",
+        "requirements_summary": null,
+        "features": [],
+        "non_functional": [],
+        "target_users": "",
+        "assumptions": [],
+        "outstanding_questions": [
+            "Can you provide more details about the specific problem or goal for the software project?"
+        ],
+        "error": null,
+        "parsing_status": "NeedsUserInput"
+    },
+    "architecture_document": {},
+    "technology_stack": [],
+    "generated_code": {},
+    "code_analysis": [],
+    "unit_tests": {},
+    "test_results": [],
+    "debugging_info": [],
+    "deployment_config": {},
+    "documentation": {},
+    "current_phase": "Phase1_Requirements",
+    "status": "NeedsUserInput",
+    "knowledge_graph": {},
+    "error_log": [],
+    "selected_wrappers": [],
+    "latest_user_response": null,
+    "user_feedback": [],
+    "llm_call_history": [
+        {
+            "text": "Of course! I'd love to help. To get started, can you tell me a bit more about the specific problem or goal you have in mind for this software project? This will help me understand what you're looking to achieve and how I can assist you further.",
+            "model_identifier": "gpt-3.5-turbo",
+            "cost": null,
+            "latency_ms": 1551.204159972258,
+            "error": null,
+            "finish_reason": "stop"
+        },
+        {
+            "text": "{\n    \"status\": \"NeedsUserInput\",\n    \"requirements_summary\": null,\n    \"features\": [],\n    \"non_functional\": [],\n    \"target_users\": \"\",\n    \"assumptions\": [],\n    \"outstanding_questions\": [\n        \"Can you provide more details about the specific problem or goal for the software project?\"\n    ],\n    \"error\": null\n}",
+            "model_identifier": "gpt-3.5-turbo",
+            "cost": null,
+            "latency_ms": 1496.453886036761,
+            "error": null,
+            "finish_reason": "stop"
+        }
+    ]
+}

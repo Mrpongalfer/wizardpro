@@ -7,7 +7,7 @@ OptimizeAlgorithm: |-
   Previous Code (``{l language | default('python') }}`):
   ```{{ language | default('python') }}
   {{ previous_code | default('# No code provided') }}
-  ```  
+  ```
 
   Your task is to **refine ONLY this specific piece of code*** for better performance (e.g., time complexity, memory usage). Apply relevant optimization techniques (e.g., memoization, dynamic programming, better data structures).
   Explain the optimization applied briefly in comments within the code.
@@ -25,7 +25,7 @@ RefactorCode: |-
   Original Code:
   ```{{ language | default('python') }}
   {{ previous_code | default('# No code provided') }}
-  ```  
+  ```
 
   Your task is to **refactor the provided code** to address the specified points while preserving its original functionality. Add comments explaining significant changes.
   Output *only* the complete refactored code block for the specified scope (e.g., the entire file or function).
@@ -38,7 +38,7 @@ AddErrorHandling: |-
   Current Code:
   ```{{ language | default('python') }}
   {{ previous_code | default('# No code provided') }}
-  ```  
+  ```
 
   Your task is to **add appropriate error handling** (e.g., try-except blocks, input validation, specific exception types, logging errors) to make the code more resilient. Consider potential edge cases.
   Output *only* the modified code block with added error handling. Ensure necessary imports (like blogging `)` are included.
@@ -54,7 +54,7 @@ AddSecurityChecks: |-
   Current Code:
   ```{{ language | default('python') }}
   {{ previous_code | default('# No code provided') }}
-  ```  
+  ```
 
   Your task is to **modify the code to mitigate the identified security risks**. Implement necessary checks (e.g., validation, sanitization, escaping,) parameterized queries (if applicable), authorization checks, or other security best practices.
   Output *only* the hardened code block.
@@ -246,3 +246,30 @@ ParseDeploymentArtifactsJSON: |-
 
   Respond ONLY with the valid JSON object. Do not include explanations or apologies.
 
+ProcessUserResponse: |-
+  **Sub-Task: Process User Response for Requirements**
+  You are the Project Initiator AI assistant, continuing a requirements discussion.
+
+  The initial user request was:
+  '''
+  {{ ctx.initial_request | default('Initial request not available in context.') }}
+  '''
+
+  The requirements gathered or questions asked previously were summarized as:
+  '''json
+  {# The 'previous_requirements' variable must be passed in template_data when calling this #}
+  {{ previous_requirements | default({'status': 'No previous state provided.'}) | toyaml }}
+  '''
+
+  The user has now provided the following response:
+  '''
+  {# The 'user_response' variable must be passed in template_data when calling this #}
+  {{ user_response | default('No response provided.') }}
+  '''
+
+  Based on the user's response, please continue the requirements elicitation process.
+  Your goal is to incorporate the user's feedback, refine the understanding of the requirements, and either:
+  1. Ask *specific* further clarifying questions if needed.
+  2. Provide an updated summary of the requirements if they seem clearer now.
+
+  Maintain a conversational tone. Remember that your output (whether questions or requirement summaries) will be analyzed and parsed by another AI component later, so clarity is helpful. Focus on making progress towards well-defined requirements.
