@@ -4,11 +4,10 @@ import json
 import os
 import datetime
 import uuid  # Needed for potential default reconstruction if using dataclasses.asdict directly
-from typing import Optional, Dict, Any, Union, List
+from typing import Optional, Dict, Union, List
 from dataclasses import is_dataclass, asdict
 
 # Corrected Relative Import for config
-from .. import config
 
 # Logging is configured based on config import now
 logger = logging.getLogger(__name__)
