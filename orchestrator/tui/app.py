@@ -2,12 +2,7 @@
 import logging
 from pathlib import Path
 import sys
-from typing import (
-    Optional,
-    List,
-    Dict,
-    Any,
-)  # Keep Dict, Any for context hints if needed
+from typing import Optional, List  # Keep Dict, Any for type hints if needed
 import datetime
 
 # Textual Imports
@@ -25,8 +20,11 @@ try:
 
     logger = logging.getLogger(__name__)
 except ImportError:
+    # Fallback logic
     logger = logging.getLogger("tui_app")
-    logger.warning("Running TUI potentially outside package context...")
+    logger.warning(
+        "Running TUI potentially outside package context. Attempting path modification."
+    )
     script_dir = Path(__file__).resolve().parent
     parent_dir = script_dir.parent
     root_dir = parent_dir.parent
@@ -40,7 +38,7 @@ except ImportError:
         from orchestrator.core.data_types import ProjectContext
     except ImportError as e_inner:
         logger.critical(f"Failed import: {e_inner}")
-        raise RuntimeError("Could not import WizardPro modules.") from e_inner
+        raise RuntimeError("Could not import required WizardPro modules.") from e_inner
 
 
 class WizardProTUI(App):
@@ -53,10 +51,9 @@ class WizardProTUI(App):
         ("d", "toggle_dark", "Toggle Dark Mode"),
         ("ctrl+c", "quit", "Quit"),
     ]
+
     workflow_status = var("Idle")
-    current_context: Optional[ProjectContext] = var(
-        None
-    )  # Keep Optional for type hinting
+    current_context: Optional[ProjectContext] = var(None)
 
     def compose(self) -> ComposeResult:
         """Create child widgets for the app."""
@@ -65,7 +62,7 @@ class WizardProTUI(App):
             with Vertical(id="left-column"):
                 yield Static("--- Controls ---", classes="pane-title")
                 with VerticalScroll(id="left-pane"):
-                    with Container(id="request-area"):  # Using Container
+                    with Container(id="request-area"):
                         yield Static("Initial Request:", classes="label")
                         yield Input(
                             placeholder="Describe the application...",
@@ -83,21 +80,22 @@ class WizardProTUI(App):
                             id="wrapper-selection-placeholder",
                         )
                         yield Button(
-                            "Start Workflow", id="start-button", variant="primary"
-                        )  # Correct definition
-                    with Container(
-                        id="interaction-area", classes="hidden"
-                    ):  # Using Container
+                            "Start Workflow",
+                            id="start-button",
+                            variant="primary",
+                        )
+                    with Container(id="interaction-area", classes="hidden"):
                         yield Static(
                             "Assistant Questions:",
                             classes="label",
                             id="interaction-label",
                         )
                         yield Static(
-                            "...", id="interaction-questions", classes="message-display"
+                            "...",
+                            id="interaction-questions",
+                            classes="message-display",
                         )
                         yield Static("Your Response:", classes="label")
-                        # Correct TextArea - no bindings arg
                         yield TextArea(
                             language="markdown",
                             id="user-response-area",
@@ -107,21 +105,19 @@ class WizardProTUI(App):
                             "Submit Response",
                             id="submit-response-button",
                             variant="success",
+                            disabled=True,
                         )
                 yield Static(id="status-line", classes="status")
             with Vertical(id="right-column"):
                 yield Static("--- Logs / Output ---", classes="pane-title")
                 with VerticalScroll(id="right-pane"):
-                    yield Log(
-                        highlight=True, id="log-output", auto_scroll=True
-                    )  # Correct Log - no markup arg
+                    yield Log(highlight=True, id="log-output", auto_scroll=True)
         yield Footer()
 
     def on_mount(self) -> None:
         """Configure logging and focus input on app mount."""
-        # Correct logging setup from previous steps
         log_widget = self.query_one(Log)
-        textual_handler = TextualHandler(target=log_widget)
+        textual_handler = TextualHandler(log_widget)
         formatter = logging.Formatter(
             "%(asctime)s|%(levelname)s|%(name)s:%(lineno)d| %(message)s",
             datefmt="%H:%M:%S",
@@ -142,7 +138,7 @@ class WizardProTUI(App):
         log_level = getattr(cfg, "LOG_LEVEL", logging.INFO)
         root_logger.setLevel(log_level)
         logger.info(
-            f"Logging configured for TUI. Level: {logging.getLevelName(root_logger.level)}."
+            f"Logging configured. Level: {logging.getLevelName(root_logger.level)}."
         )
         self.query_one("#initial-request", Input).focus()
         self.update_status_line("Idle. Enter request and press Start.")
@@ -153,26 +149,35 @@ class WizardProTUI(App):
 
     def update_status_line(self, status: str):
         """Helper to update the status line widget."""
-        # Correctly formatted version
         try:
             status_line = self.query_one("#status-line", Static)
             status_line.update(f"Status: {status}")
         except Exception:
-            logger.error("Failed to update status line widget.", exc_info=True)
+            logger.error("Failed status update.", exc_info=True)
 
     def show_interaction_area(self, show: bool = True):
-        """Show or hide the user interaction widgets."""
-        # Corrected version with focus logic
+        """Show or hide the user interaction widgets and manage button/focus states."""
         try:
             interaction_area = self.query_one("#interaction-area")
             request_area = self.query_one("#request-area")
+            submit_button = self.query_one("#submit-response-button", Button)
+            start_button = self.query_one("#start-button", Button)
+            text_area = self.query_one("#user-response-area", TextArea)
+
             interaction_area.set_class(not show, "hidden")
             request_area.set_class(show, "hidden")
+
             if show:
-                # Use timer for reliability
-                self.set_timer(
-                    0.1, lambda: self.query_one("#user-response-area", TextArea).focus()
-                )
+                # When showing interaction: enable submit, disable start, focus text area
+                submit_button.disabled = False
+                start_button.disabled = True
+                text_area.disabled = False
+                self.set_timer(0.1, text_area.focus)  # Focus after slight delay
+            else:
+                # When hiding interaction: disable submit
+                submit_button.disabled = True
+                text_area.disabled = True  # Also disable textarea when hidden
+
         except Exception as e:
             logger.error(
                 f"Error toggling interaction area visibility: {e}", exc_info=True
@@ -180,11 +185,11 @@ class WizardProTUI(App):
 
     def prompt_for_user_input(self, context: ProjectContext):
         """Called by worker when user input is needed."""
-        # Corrected version with safe 'get' access
         logging.info("Workflow requires user input. Updating UI.")
         self.current_context = context
         try:
             question_widget = self.query_one("#interaction-questions", Static)
+            # Safely get questions
             questions = (
                 context.refined_requirements.get("outstanding_questions", [])
                 if context.refined_requirements
@@ -206,7 +211,6 @@ class WizardProTUI(App):
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle start and submit buttons."""
         if event.button.id == "start-button":
-            # (Logic as previously defined)
             initial_request = self.query_one("#initial-request", Input).value
             project_id = self.query_one("#project-id", Input).value or None
             if not initial_request:
@@ -221,6 +225,7 @@ class WizardProTUI(App):
             logging.info(
                 f"Starting workflow - ID: {project_id or '(New)'}, Request: {initial_request[:50]}..., Wrappers: {selected_wrappers}"
             )
+            # Run the worker
             self.run_worker(
                 self.run_orchestrator_worker(
                     initial_request, project_id, False, selected_wrappers
@@ -238,24 +243,17 @@ class WizardProTUI(App):
                 self.update_status_line("Status: Please enter a response.")
                 return
 
-            # --- CORRECTED BLOCK for checking context (Multi-line) ---
+            # Check context exists before proceeding
             if not current_ctx:
-                logging.error(
-                    "Submit response clicked, but no current context found to resume."
-                )
-                self.update_status_line(
-                    "Error: No context to resume. Start a new workflow?"
-                )
-                self.show_interaction_area(False)  # Hide interaction area
-                try:
-                    # Re-enable start button as we cannot resume
+                logging.error("Submit response: no current context.")
+                self.update_status_line("Error: No context to resume.")
+                self.show_interaction_area(False)
+                try:  # Try to re-enable start button if possible
                     self.query_one("#start-button", Button).disabled = False
                 except Exception:
-                    pass  # Ignore if button not found
+                    pass
                 return
-            # --- END CORRECTED BLOCK ---
 
-            # (Rest of submit logic unchanged)
             logging.info(f"User response submitted: {response_text[:100]}...")
             current_ctx.latest_user_response = response_text
             current_ctx.user_feedback.append(
@@ -268,11 +266,13 @@ class WizardProTUI(App):
                 }
             )
             current_ctx.status = "Resuming"
+            # Update UI immediately
             event.button.disabled = True
             self.query_one("#user-response-area", TextArea).text = ""
             self.show_interaction_area(False)
             self.update_status_line("Status: Resuming Workflow...")
             logging.info(f"Resuming workflow for Project ID: {current_ctx.project_id}")
+            # Run the worker again for resume
             self.run_worker(
                 self.run_orchestrator_worker(
                     initial_request=None,
@@ -294,7 +294,6 @@ class WizardProTUI(App):
         selected_wrappers: Optional[List[str]],
     ):
         """Runs the orchestrator workflow in a background worker."""
-        # (Worker method with corrected enable_buttons internal function)
         final_context: Optional[ProjectContext] = None
         try:
             self.call_from_thread(
@@ -313,6 +312,7 @@ class WizardProTUI(App):
                 resume=resume,
                 selected_wrappers=selected_wrappers,
             )
+            # Update UI based on final state
             if final_context.status == "NeedsUserInput":
                 self.call_from_thread(self.prompt_for_user_input, final_context)
             else:
@@ -327,25 +327,29 @@ class WizardProTUI(App):
             logging.critical(f"Error in worker: {e}", exc_info=True)
             self.call_from_thread(setattr, self, "workflow_status", error_msg)
         finally:
-            # --- CORRECTED enable_buttons definition (Multi-line) ---
+            # Re-enable appropriate button(s) based on final state
             def enable_buttons():
+                """Safely enable/disable buttons in the main thread."""
                 try:
-                    if not final_context or final_context.status != "NeedsUserInput":
-                        self.query_one("#start-button", Button).disabled = False
+                    should_start_be_disabled = (
+                        final_context is not None
+                        and final_context.status == "NeedsUserInput"
+                    )
+                    self.query_one(
+                        "#start-button", Button
+                    ).disabled = should_start_be_disabled
+                    # Submit button always disabled unless shown by show_interaction_area
                     submit_button = self.query_one("#submit-response-button", Button)
                     if submit_button:
-                        submit_button.disabled = (
-                            True  # Ensure submit always disabled after run
-                        )
+                        submit_button.disabled = True
                 except Exception:
                     logger.error("Failed re-enable/disable buttons.")
 
-            # --- End Correction ---
             self.call_from_thread(enable_buttons)
 
 
 if __name__ == "__main__":
-    import datetime  # Keep import here for direct run
+    import datetime  # Keep import here for direct run if needed
 
     app = WizardProTUI()
     app.run()
