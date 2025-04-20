@@ -57,8 +57,8 @@ if _db_vars_exist:
         # elif DB_TYPE == "mysql":
         #     DATABASE_CONNECTION_INFO = f"mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}" # Example
         else:
-             logger.warning(f"Unsupported DB_TYPE '{DB_TYPE}' specified in config.")
-    except Exception as e:
+_db_vars_exist = all([DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD])  # Ensure all DB vars are non-empty
+if _db_vars_exist:  # Check if all required DB vars are present
         logger.error(f"Error constructing database connection info: {e}", exc_info=True)
         DATABASE_CONNECTION_INFO = None
 else:
