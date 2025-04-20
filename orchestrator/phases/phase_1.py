@@ -1,12 +1,11 @@
 # orchestrator/phases/phase_1.py (Requirements Elicitation)
 import logging
 import json
-from typing import Optional, Dict, Any
+from typing import Optional
 
 # Corrected Relative Imports
 from . import Phase
 from ..core.data_types import ProjectContext, LLMOutput
-from ..core import utils
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +66,7 @@ class Phase1(Phase):
             # --- Process the output (from either initial call or response processing) ---
             if not elicitation_llm_output or elicitation_llm_output.error:
                 logger.error(
-                    f"Halting phase due to LLM call failure (elicitation/response processing)."
+                    "Halting phase due to LLM call failure (elicitation/response processing)."
                 )
                 # If error happened after processing user input, ensure status is Error
                 context.update_status("Error", current_phase=self.phase_name_key)
@@ -169,7 +168,7 @@ class Phase1(Phase):
             # --- Finalize Phase Status ---
             req_summary = str(context.refined_requirements)[:200]
             logger.debug(f"Stored requirements (summary): {req_summary}...")
-            logger.info(f"Requirements gathering & AI parsing attempt complete.")
+            logger.info("Requirements gathering & AI parsing attempt complete.")
 
             if needs_input_flag:
                 context.update_status(

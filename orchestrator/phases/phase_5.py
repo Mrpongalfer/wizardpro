@@ -1,12 +1,11 @@
 # orchestrator/phases/phase_5.py (Deployment & Optimization)
 import logging
 import json  # Import json for parsing
-from typing import Optional, Dict, List, Any, Union  # Added Union, List
+from typing import Optional  # Added Union, List
 
 # Corrected Relative Imports
 from . import Phase
 from ..core.data_types import ProjectContext, LLMOutput
-from ..core import utils
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +77,6 @@ class Phase5(Phase):
                     "Artifact parsing LLM call successful. Attempting to parse JSON response..."
                 )
                 parsing_response_text = parsing_llm_output.text
-                parsed_successfully = False
                 try:
                     # Basic cleanup for potential markdown wrappers
                     if parsing_response_text.strip().startswith("```json"):
@@ -101,7 +99,7 @@ class Phase5(Phase):
                                 raw_deploy_text
                             )
                             context.deployment_config["parsing_status"] = (
-                                f'Failed - Parser Error: {parsed_data["error"]}'
+                                f"Failed - Parser Error: {parsed_data['error']}"
                             )
                         else:
                             logger.info(
@@ -113,7 +111,7 @@ class Phase5(Phase):
                                     f"Artifact parsing LLM reported: {parsed_data['parsing_warning']}"
                                 )
                                 parsing_status = (
-                                    f'Warning - {parsed_data["parsing_warning"]}'
+                                    f"Warning - {parsed_data['parsing_warning']}"
                                 )
 
                             # Iterate through parsed data and sort into docs vs config
@@ -186,7 +184,6 @@ class Phase5(Phase):
                             logger.info(
                                 f"Stored {len(docs)} documentation files and {len(configs)} deployment config files."
                             )
-                            parsed_successfully = True
                     else:  # Parsed data is not a dictionary
                         logger.error(
                             "Artifact parsing LLM response was not a valid JSON object."
@@ -237,7 +234,7 @@ class Phase5(Phase):
             # --- End Phase 5 Logic ---
 
             # 5. Final status update
-            logger.info(f"Deployment/Optimization/Documentation phase complete.")
+            logger.info("Deployment/Optimization/Documentation phase complete.")
             # Mark the entire project workflow as Complete (error or not, this is the end)
             context.update_status("Complete", current_phase=self.phase_name_key)
             logger.info(
@@ -253,5 +250,5 @@ class Phase5(Phase):
             context.update_status("Error", current_phase=self.phase_name_key)
             # Use base class helper to log error before returning
             return self._handle_error_and_halt(
-                context, f"Unexpected critical error in Phase 5", str(e)
+                context, "Unexpected critical error in Phase 5", str(e)
             )

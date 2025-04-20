@@ -1,12 +1,11 @@
 # orchestrator/phases/phase_3.py (Code Generation)
 import logging
 import json  # Added for parsing JSON
-from typing import Optional, Dict, Any, Tuple
+from typing import Optional, Dict, Tuple
 
 # Corrected Relative Imports
 from . import Phase
 from ..core.data_types import ProjectContext, LLMOutput
-from ..core import utils  # Keep utils for now, might still be useful
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +29,7 @@ class Phase3(Phase):
             return self._handle_error_and_halt(
                 context, "Architecture document missing/invalid."
             )
-        if context.architecture_document.get("parsed") == False:
+        if not context.architecture_document.get("parsed"):
             logger.warning("Arch not parsed. Code gen quality may suffer.")
         if not context.technology_stack:
             logger.warning("Tech stack missing. Code gen less specific.")
@@ -44,7 +43,7 @@ class Phase3(Phase):
                 context=context, prompt_key=self.phase_name_key
             )
             if not code_gen_llm_output or code_gen_llm_output.error:
-                logger.error(f"Halting phase due to initial code gen LLM call failure.")
+                logger.error("Halting phase due to initial code gen LLM call failure.")
                 return context  # Error status already set
 
             raw_code_gen_text = code_gen_llm_output.text
@@ -95,7 +94,7 @@ class Phase3(Phase):
                         )
                         context.code_analysis.append(
                             {
-                                "parser_status": f'Failed - Parser Error: {parsed_data["error"]}'
+                                "parser_status": f"Failed - Parser Error: {parsed_data['error']}"
                             }
                         )
                     elif parsed_data.get("parsing_warning"):
@@ -111,7 +110,7 @@ class Phase3(Phase):
                         parsed_files[placeholder_name] = code_content
                         context.code_analysis.append(
                             {
-                                "parser_status": f'Warning - {parsed_data["parsing_warning"]}',
+                                "parser_status": f"Warning - {parsed_data['parsing_warning']}",
                                 "file_parsed": placeholder_name,
                             }
                         )
@@ -282,7 +281,7 @@ class Phase3(Phase):
                 exc_info=True,
             )
             return self._handle_error_and_halt(
-                context, f"Unexpected critical error", str(e)
+                context, "Unexpected critical error", str(e)
             )
 
     def _analyze_code_quality(

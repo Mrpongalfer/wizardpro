@@ -1,12 +1,11 @@
 # orchestrator/phases/phase_4.py (Testing & Debugging)
 import logging
 import json  # Import json for parsing
-from typing import Optional, Dict, List, Any  # Added List
+from typing import Optional  # Added List
 
 # Corrected Relative Imports
 from . import Phase
 from ..core.data_types import ProjectContext, LLMOutput
-from ..core import utils  # Keep utils for now
 
 logger = logging.getLogger(__name__)
 
@@ -42,11 +41,12 @@ class Phase4(Phase):
             # --- 2. Initial LLM Call (Testing/Analysis) ---
             logger.info("Calling LLM for initial testing/debugging analysis...")
             testing_llm_output: Optional[LLMOutput] = self._call_llm(
-                context=context, prompt_key=self.phase_name_key  # Main Phase 4 prompt
+                context=context,
+                prompt_key=self.phase_name_key,  # Main Phase 4 prompt
             )
 
             if not testing_llm_output or testing_llm_output.error:
-                logger.error(f"Halting phase due to initial testing LLM call failure.")
+                logger.error("Halting phase due to initial testing LLM call failure.")
                 return context
 
             raw_testing_text = testing_llm_output.text
@@ -90,7 +90,6 @@ class Phase4(Phase):
                     "Test result parsing LLM call successful. Parsing JSON response..."
                 )
                 parsing_response_text = parsing_llm_output.text
-                parsed_successfully = False
                 try:
                     if parsing_response_text.strip().startswith("```json"):
                         parsing_response_text = parsing_response_text.strip()[
@@ -115,7 +114,7 @@ class Phase4(Phase):
                                 {
                                     "name": "parsing_failed",
                                     "result": "Unknown",
-                                    "reason": f'Parser Error: {parsed_data["error"]}',
+                                    "reason": f"Parser Error: {parsed_data['error']}",
                                 }
                             )
                         else:
@@ -148,7 +147,6 @@ class Phase4(Phase):
                             logger.debug(
                                 f"Updated context. Test Summary: {parsed_data.get('test_results_summary', 'N/A')}"
                             )
-                            parsed_successfully = True
                     else:
                         logger.error(
                             "Test parsing LLM response was not valid JSON object."
@@ -200,7 +198,7 @@ class Phase4(Phase):
             # Future: Loop based on parsed context.test_results / context.debugging_info
 
             # --- End Phase 4 Logic ---
-            logger.info(f"Initial testing/debugging and AI parsing attempt complete.")
+            logger.info("Initial testing/debugging and AI parsing attempt complete.")
             return self._update_context_and_proceed(context)
 
         except Exception as e:
@@ -209,5 +207,5 @@ class Phase4(Phase):
                 exc_info=True,
             )
             return self._handle_error_and_halt(
-                context, f"Unexpected critical error", str(e)
+                context, "Unexpected critical error", str(e)
             )
